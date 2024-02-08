@@ -1,9 +1,11 @@
 from collections import defaultdict
 from calendar import day_name
 from datetime import datetime
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, Tuple
+import sys
 
 TODAY = datetime.today().date()
+CONTACTS = {}
 
 
 def _convert_user_birthday_to_current_year(users: List[Dict[str, Union[str, datetime]]]) \
@@ -18,13 +20,19 @@ def _estimate_birthday_delta(user: Dict[str, Union[str, datetime]]) -> Optional[
         return user.get("birthday").strftime("%A")
 
 
+def _parse_input(user_input: str) -> Tuple[str, ...]:
+    cmd, *args = user_input.split()
+    cmd = cmd.strip().lower()
+    return cmd, *args
+
+
 def get_birthdays_per_week(users: List[Dict[str, Union[str, datetime]]]) -> None:
     users_with_day_this_week = defaultdict(list)
     updated_users_list = _convert_user_birthday_to_current_year(users)
 
     for user in updated_users_list:
         if day := _estimate_birthday_delta(user):
-            if day.upper() in ["SATURDAY", "SUNDAY"]:
+            if day.lower() in ["saturday", "sunday"]:
                 users_with_day_this_week["Monday"].append(user.get("name"))
             else:
                 users_with_day_this_week[day].append(user.get("name"))
@@ -35,11 +43,83 @@ def get_birthdays_per_week(users: List[Dict[str, Union[str, datetime]]]) -> None
         print(f"{day}: {', '.join(users_with_day_this_week[day])}")
 
 
+def _add_contact(*args):
+    if len(args) != 2:
+        print("Invalid number of arguments for add command, please try again.")
+        return
+
+    name, phone = args
+
+    if name in CONTACTS:
+        change = input(f"Contact {name.capitalize()} already exists. Do you want to change it?")
+        if change.lower() in ["yes", "y"]:
+            _change_contact(name, phone)
+            return
+        else:
+            return
+    else:
+        CONTACTS[name] = phone
+        print(f"Contact {name.capitalize()} has been added.")
+
+
+def _change_contact(*args):
+    if len(args) != 2:
+        raise ValueError("Invalid number of arguments for add command, please try again.")
+    name, phone = args
+
+    if name not in CONTACTS:
+        print(f"Contact {name.capitalize()} does not exist.")
+        return
+    else:
+        CONTACTS[name] = phone
+        print(f"Contact {name.capitalize()} has been updated.")
+
+
+def _get_all():
+    for name, phone in CONTACTS.items():
+        print(f"{name.capitalize()}:\t {phone}")
+
+
+def _get_phone(*args):
+    if len(args) != 1:
+        print("Invalid number of arguments for phone command, please try again.")
+        return
+    name = args[0]
+    if name not in CONTACTS:
+        print(f"Contact {name.capitalize()} does not exist.")
+    else:
+        print(f"{name.capitalize()}: {CONTACTS[name]}")
+
+
+def _exit_bot():
+    print("Goodbye!")
+    sys.exit(0)
+
+
+def _hello_bot():
+    print("How can I help you?")
+
+
+SUPPORTED_COMMANDS = {"exit": _exit_bot,
+                      "close": _exit_bot,
+                      "hello": _hello_bot,
+                      "add": _add_contact,
+                      "change": _change_contact,
+                      "phone": _get_phone,
+                      "all": _get_all
+                      }
+
+
+def bot_event_loop():
+    print("Welcome to the assistant bot!")
+    while True:
+        user_input = input("Enter a command: ").strip().lower()
+        command, *args = _parse_input(user_input)
+        try:
+            SUPPORTED_COMMANDS[command](*args)
+        except KeyError:
+            print(f"Invalid command, supported commands are: {SUPPORTED_COMMANDS.keys()}. Please try again.")
+
+
 if __name__ == "__main__":
-    users = [{"name": "Bill Gates", "birthday": datetime(1955, 10, 28)},
-             {"name": "Serhii Bezuhlyi", "birthday": datetime(1988, 4, 28)},
-             {"name": "John Smith", "birthday": datetime(1965, 2, 9)},
-             {"name": "Jack Smith", "birthday": datetime(1966, 2, 9)},
-             {"name": "Jane Smith", "birthday": datetime(1965, 2, 11)},
-             ]
-    get_birthdays_per_week(users)
+    bot_event_loop()
