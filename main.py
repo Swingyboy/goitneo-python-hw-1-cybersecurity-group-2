@@ -113,12 +113,15 @@ SUPPORTED_COMMANDS = {"exit": _exit_bot,
 def bot_event_loop():
     print("Welcome to the assistant bot!")
     while True:
-        user_input = input("Enter a command: ").strip().lower()
-        command, *args = _parse_input(user_input)
         try:
+            user_input = input("Enter a command: ").strip().lower()
+            command, *args = _parse_input(user_input)
             SUPPORTED_COMMANDS[command](*args)
         except KeyError:
             print(f"Invalid command, supported commands are: {SUPPORTED_COMMANDS.keys()}. Please try again.")
+        except KeyboardInterrupt:
+            print("Goodbye!")
+            sys.exit(0)
 
 
 if __name__ == "__main__":
