@@ -43,61 +43,56 @@ def get_birthdays_per_week(users: List[Dict[str, Union[str, datetime]]]) -> None
         print(f"{day}: {', '.join(users_with_day_this_week[day])}")
 
 
-def _add_contact(*args):
+def _add_contact(*args) -> str:
     if len(args) != 2:
-        print("Invalid number of arguments for add command, please try again.")
-        return
+        return "Invalid number of arguments for add command, please try again."
 
     name, phone = args
 
     if name in CONTACTS:
         change = input(f"Contact {name.capitalize()} already exists. Do you want to change it?")
         if change.lower() in ["yes", "y"]:
-            _change_contact(name, phone)
-            return
+            return _change_contact(name, phone)
         else:
-            return
+            _hello_bot()
     else:
         CONTACTS[name] = phone
-        print(f"Contact {name.capitalize()} has been added.")
+        return f"Contact {name.capitalize()} has been added."
 
 
-def _change_contact(*args):
+def _change_contact(*args) -> str:
     if len(args) != 2:
-        raise ValueError("Invalid number of arguments for add command, please try again.")
+        return "Invalid number of arguments for add command, please try again."
     name, phone = args
 
     if name not in CONTACTS:
-        print(f"Contact {name.capitalize()} does not exist.")
-        return
+        return f"Contact {name.capitalize()} does not exist."
     else:
         CONTACTS[name] = phone
-        print(f"Contact {name.capitalize()} has been updated.")
+        return f"Contact {name.capitalize()} has been updated."
 
 
-def _get_all():
+def _get_all() -> None:
     for name, phone in CONTACTS.items():
         print(f"{name.capitalize()}:\t {phone}")
 
 
-def _get_phone(*args):
+def _get_phone(*args) -> str:
     if len(args) != 1:
-        print("Invalid number of arguments for phone command, please try again.")
-        return
+        return "Invalid number of arguments for phone command, please try again."
     name = args[0]
     if name not in CONTACTS:
-        print(f"Contact {name.capitalize()} does not exist.")
+        return f"Contact {name.capitalize()} does not exist."
     else:
-        print(f"{name.capitalize()}: {CONTACTS[name]}")
+        return f"{name.capitalize()}: {CONTACTS[name]}"
 
 
-def _exit_bot():
-    print("Goodbye!")
-    sys.exit(0)
+def _exit_bot() -> str:
+    return "Goodbye!"
 
 
-def _hello_bot():
-    print("How can I help you?")
+def _hello_bot() -> str:
+    return "How can I help you?"
 
 
 SUPPORTED_COMMANDS = {"exit": _exit_bot,
@@ -116,9 +111,14 @@ def bot_event_loop():
         try:
             user_input = input("Enter a command: ").strip().lower()
             command, *args = _parse_input(user_input)
-            SUPPORTED_COMMANDS[command](*args)
+            result = SUPPORTED_COMMANDS[command](*args)
+            if result:
+                print(result)
         except KeyError:
-            print(f"Invalid command, supported commands are: {SUPPORTED_COMMANDS.keys()}. Please try again.")
+            print(f"Invalid command, supported commands are:")
+            for key in SUPPORTED_COMMANDS.keys():
+                print(f" - {key}")
+            print("Please try again.")
         except KeyboardInterrupt:
             print("Goodbye!")
             sys.exit(0)
