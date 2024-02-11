@@ -1,46 +1,14 @@
-from collections import defaultdict
-from calendar import day_name
-from datetime import datetime
-from typing import List, Dict, Optional, Union, Tuple
+from typing import Tuple
 import sys
 
-TODAY = datetime.today().date()
+
 CONTACTS = {}
-
-
-def _convert_user_birthday_to_current_year(users: List[Dict[str, Union[str, datetime]]]) \
-        -> List[Dict[str, Union[str, datetime]]]:
-    return [{"name": user.get("name"), "birthday": user.get("birthday").date().replace(year=TODAY.year)} for user in
-            users]
-
-
-def _estimate_birthday_delta(user: Dict[str, Union[str, datetime]]) -> Optional[str]:
-    delta_days = (user.get("birthday") - TODAY).days
-    if delta_days < 7:
-        return user.get("birthday").strftime("%A")
 
 
 def _parse_input(user_input: str) -> Tuple[str, ...]:
     cmd, *args = user_input.split()
     cmd = cmd.strip().lower()
     return cmd, *args
-
-
-def get_birthdays_per_week(users: List[Dict[str, Union[str, datetime]]]) -> None:
-    users_with_day_this_week = defaultdict(list)
-    updated_users_list = _convert_user_birthday_to_current_year(users)
-
-    for user in updated_users_list:
-        if day := _estimate_birthday_delta(user):
-            if day.lower() in ["saturday", "sunday"]:
-                users_with_day_this_week["Monday"].append(user.get("name"))
-            else:
-                users_with_day_this_week[day].append(user.get("name"))
-
-    sorted_days = sorted(users_with_day_this_week.keys(), key=lambda x: list(day_name).index(x))
-
-    for day in sorted_days:
-        print(f"{day}: {', '.join(users_with_day_this_week[day])}")
 
 
 def _add_contact(*args) -> str:
@@ -95,13 +63,8 @@ def _hello_bot() -> str:
     return "How can I help you?"
 
 
-SUPPORTED_COMMANDS = {"exit": _exit_bot,
-                      "close": _exit_bot,
-                      "hello": _hello_bot,
-                      "add": _add_contact,
-                      "change": _change_contact,
-                      "phone": _get_phone,
-                      "all": _get_all
+SUPPORTED_COMMANDS = {"exit": _exit_bot, "close": _exit_bot, "hello": _hello_bot, "add": _add_contact,
+                      "change": _change_contact, "phone": _get_phone, "all": _get_all
                       }
 
 
@@ -120,7 +83,7 @@ def bot_event_loop():
                 print(f" - {key}")
             print("Please try again.")
         except KeyboardInterrupt:
-            print("Goodbye!")
+            print("\nGoodbye!")
             sys.exit(0)
 
 
